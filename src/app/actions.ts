@@ -1,6 +1,5 @@
 'use server';
 
-import { analyzeVideoForTags } from '@/ai/flows/video-analysis-tag-generation';
 import { db, storage } from '@/lib/firebase/client';
 import { addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
@@ -25,20 +24,10 @@ export async function handleVideoUpload(formData: FormData) {
     });
     const video_url = await getDownloadURL(uploadResult.ref);
 
-    let tags: string[] = [];
-    try {
-      const videoDataUri = `data:video/mp4;base64,${videoBuffer.toString('base64')}`;
-      const analysis = await analyzeVideoForTags({ videoDataUri });
-      tags = analysis.tags;
-    } catch (aiError) {
-      console.error('AI analysis failed:', aiError);
-    }
-
     await addDoc(collection(db, 'trees'), {
       video_url,
       status: 'Bekliyor',
       timestamp: serverTimestamp(),
-      tags,
     });
   } catch (error) {
     console.error('Upload failed:', error);
