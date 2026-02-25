@@ -12,16 +12,19 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app: FirebaseApp | undefined;
-let db: Firestore | undefined;
-let storage: FirebaseStorage | undefined;
-let auth: Auth | undefined;
+let app: FirebaseApp;
+let db: Firestore;
+let storage: FirebaseStorage;
+let auth: Auth;
 
-if (firebaseConfig.apiKey) {
+if (firebaseConfig.apiKey && firebaseConfig.projectId) {
     app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
     db = getFirestore(app);
     storage = getStorage(app);
     auth = getAuth(app);
+} else {
+    console.warn("Firebase config is missing or incomplete. Firebase services will not be initialized.");
 }
+
 
 export { app, db, storage, auth };
