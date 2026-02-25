@@ -7,15 +7,11 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
-export async function handleVideoUpload(formData: FormData, userId: string) {
+export async function handleVideoUpload(formData: FormData) {
   const videoFile = formData.get('video') as File;
 
   if (!videoFile) {
     return { error: 'Geçersiz video dosyası.' };
-  }
-  
-  if (!userId) {
-    return { error: 'Kullanıcı kimliği bulunamadı. Lütfen giriş yapın.' };
   }
 
   const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
@@ -38,7 +34,7 @@ export async function handleVideoUpload(formData: FormData, userId: string) {
       console.error('AI analysis failed:', aiError);
     }
 
-    await addDoc(collection(db, 'users', userId, 'trees'), {
+    await addDoc(collection(db, 'trees'), {
       video_url,
       status: 'Bekliyor',
       timestamp: serverTimestamp(),

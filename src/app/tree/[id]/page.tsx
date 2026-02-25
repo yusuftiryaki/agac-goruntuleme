@@ -1,7 +1,6 @@
 'use client';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { notFound, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { ModelViewer } from '@/components/tree/ModelViewer';
 import type { Tree, TreeStatus } from '@/types';
@@ -10,12 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { Hourglass, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
-import { useAuth } from '@/hooks/use-auth';
 import { useEffect, useState } from 'react';
 
-async function getTreeData(userId: string, id: string): Promise<Tree | null> {
+async function getTreeData(id: string): Promise<Tree | null> {
   try {
-    const docRef = doc(db, 'users', userId, 'trees', id);
+    const docRef = doc(db, 'trees', id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -39,21 +37,11 @@ const getStatusVariant = (status: TreeStatus) => {
 
 
 export default function TreeDetailPage({ params }: { params: { id: string } }) {
-  const { user, loading: authLoading } = useAuth();
-  const router = useRouter();
   const [tree, setTree] = useState<Tree | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (authLoading) {
-      return;
-    }
-    if (!user) {
-      router.replace('/login');
-      return;
-    }
-    
-    getTreeData(user.uid, params.id).then(treeData => {
+    getTreeData(params.id).then(treeData => {
       if (!treeData) {
         setTree(null);
       } else {
@@ -62,9 +50,9 @@ export default function TreeDetailPage({ params }: { params: { id: string } }) {
       setLoading(false);
     });
 
-  }, [params.id, user, authLoading, router]);
+  }, [params.id]);
 
-  if (loading || authLoading) {
+  if (loading) {
     return (
        <div className="flex min-h-screen w-full flex-col">
         <Header />
@@ -81,7 +69,7 @@ export default function TreeDetailPage({ params }: { params: { id: string } }) {
         <Header />
         <main className="flex-1 container py-8 text-center">
             <h1 className="text-2xl font-bold">Ağaç Bulunamadı</h1>
-            <p className="text-muted-foreground">Aradığınız ağaç mevcut değil veya bu ağacı görme yetkiniz yok.</p>
+            <p className="text-muted-foreground">Aradığınız ağaç mevcut değil.</p>
         </main>
       </div>
     )

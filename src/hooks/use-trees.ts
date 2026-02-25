@@ -4,22 +4,19 @@ import { useState, useEffect } from 'react';
 import { collection, query, onSnapshot, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import type { Tree } from '@/types';
-import { useAuth } from './use-auth';
 
 export function useTrees() {
-  const { user } = useAuth();
   const [trees, setTrees] = useState<Tree[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (!user || !db) {
-      setTrees([]);
+    if (!db) {
       setLoading(false);
       return;
     }
 
-    const q = query(collection(db, 'users', user.uid, 'trees'), orderBy('timestamp', 'desc'));
+    const q = query(collection(db, 'trees'), orderBy('timestamp', 'desc'));
 
     const unsubscribe = onSnapshot(
       q,
@@ -39,7 +36,7 @@ export function useTrees() {
     );
 
     return () => unsubscribe();
-  }, [user]);
+  }, []);
 
   return { trees, loading, error };
 }

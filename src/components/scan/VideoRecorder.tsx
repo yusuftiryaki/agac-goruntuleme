@@ -1,17 +1,15 @@
 'use client';
 
-import { Camera, Circle, Loader2, Square, Video, VideoOff } from 'lucide-react';
+import { Camera, Circle, Loader2, Square, VideoOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { handleVideoUpload } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
-import { useAuth } from '@/hooks/use-auth';
 
 type RecordingStatus = 'idle' | 'getting-permission' | 'ready' | 'recording' | 'processing';
 
 export function VideoRecorder() {
-  const { user } = useAuth();
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const [recordedChunks, setRecordedChunks] = useState<Blob[]>([]);
@@ -66,15 +64,6 @@ export function VideoRecorder() {
 
   useEffect(() => {
     if (status === 'processing' && recordedChunks.length > 0) {
-      if (!user) {
-        toast({
-          variant: 'destructive',
-          title: 'Giriş Gerekli',
-          description: 'Video yüklemek için giriş yapmalısınız.',
-        });
-        setStatus('idle');
-        return;
-      }
       const blob = new Blob(recordedChunks, { type: 'video/mp4' });
       const formData = new FormData();
       formData.append('video', blob, 'pistachio-scan.mp4');
@@ -84,7 +73,7 @@ export function VideoRecorder() {
         description: 'Video işleniyor ve yükleniyor. Lütfen bekleyin.',
       });
 
-      handleVideoUpload(formData, user.uid).then((result) => {
+      handleVideoUpload(formData).then((result) => {
         if (result?.error) {
           toast({
             variant: 'destructive',
@@ -97,7 +86,7 @@ export function VideoRecorder() {
 
       setRecordedChunks([]);
     }
-  }, [status, recordedChunks, toast, user]);
+  }, [status, recordedChunks, toast]);
 
   const renderContent = () => {
     switch (status) {
