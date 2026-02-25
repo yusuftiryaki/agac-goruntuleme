@@ -8,6 +8,13 @@ import { redirect } from 'next/navigation';
 
 export async function handleVideoUpload(formData: FormData) {
   console.log("handleVideoUpload Server Action started.");
+  
+  if (!storage || !db) {
+    const serviceName = !storage ? 'Storage' : 'Firestore';
+    console.error(`Firebase ${serviceName} is not initialized! Check your firebase/client.ts and .env files.`);
+    return { error: `Sunucu hatası: Firebase ${serviceName} başlatılamadı.` };
+  }
+
   const videoFile = formData.get('video') as File;
 
   if (!videoFile || videoFile.size === 0) {
@@ -54,9 +61,10 @@ export async function handleVideoUpload(formData: FormData) {
     
     let errorMessage = 'Bilinmeyen bir hata oluştu.';
     if (typeof error === 'object' && error !== null && 'code' in error) {
-      // Firebase hatalarını daha anlaşılır hale getir
-      if (error.code === 'storage/unauthorized' || error.code === 'storage/unknown') {
-        errorMessage = 'Dosya yükleme izniniz yok. Lütfen Firebase projenizin Storage > Rules bölümünden herkese yazma izni (allow read, write;) verdiğinizden emin olun.';
+      if (error.code === 'storage/unauthorized') {
+          errorMessage = 'Dosya yükleme izniniz yok. Lütfen Firebase Storage kurallarınızın herkese yazma izni verdiğinden emin olun.';
+      } else if (error.code === 'storage/unknown') {
+          errorMessage = 'Bilinmeyen depolama hatası (storage/unknown). Lütfen Firebase konsolunda Storage hizmetinin tamamen etkinleştirildiğinden emin olun (örneğin "Get Started" ekranında olmadığından). Bazen bu, proje yapılandırmasındaki bir sorundan kaynaklanır.';
       } else {
         errorMessage = `Firebase Hatası: ${error.code}. Lütfen konsol loglarını kontrol edin.`;
       }
