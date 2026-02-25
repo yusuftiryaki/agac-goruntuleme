@@ -43,7 +43,7 @@ export function VideoRecorder() {
   const startRecording = () => {
     if (stream && status === 'ready') {
       setStatus('recording');
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'video/mp4' });
+      mediaRecorderRef.current = new MediaRecorder(stream);
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setRecordedChunks((prev) => [...prev, event.data]);
@@ -64,9 +64,13 @@ export function VideoRecorder() {
 
   useEffect(() => {
     if (status === 'processing' && recordedChunks.length > 0) {
-      const blob = new Blob(recordedChunks, { type: 'video/mp4' });
+      const mimeType = recordedChunks[0].type;
+      const blob = new Blob(recordedChunks, { type: mimeType });
+      const fileExtension = mimeType.split('/')[1]?.split(';')[0] || 'mp4';
+      const fileName = `pistachio-scan.${fileExtension}`;
+      
       const formData = new FormData();
-      formData.append('video', blob, 'pistachio-scan.mp4');
+      formData.append('video', blob, fileName);
       
       toast({
         title: 'Yükleniyor...',

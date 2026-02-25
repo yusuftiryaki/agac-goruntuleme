@@ -17,10 +17,10 @@ export async function handleVideoUpload(formData: FormData) {
 
   try {
     const videoId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    const storageRef = ref(storage, `videos/${videoId}.mp4`);
+    const storageRef = ref(storage, `videos/${videoId}_${videoFile.name}`);
     
     const uploadResult = await uploadBytes(storageRef, videoBuffer, {
-      contentType: 'video/mp4',
+      contentType: videoFile.type,
     });
     const video_url = await getDownloadURL(uploadResult.ref);
 
