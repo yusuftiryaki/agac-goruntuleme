@@ -55,8 +55,8 @@ export async function handleVideoUpload(formData: FormData) {
     let errorMessage = 'Bilinmeyen bir hata oluştu.';
     if (typeof error === 'object' && error !== null && 'code' in error) {
       // Firebase hatalarını daha anlaşılır hale getir
-      if (error.code === 'storage/unauthorized') {
-        errorMessage = 'Dosya yükleme izniniz yok. Lütfen Firebase projenizin Storage > Rules bölümünden herkese yazma izni verdiğinizden emin olun.';
+      if (error.code === 'storage/unauthorized' || error.code === 'storage/unknown') {
+        errorMessage = 'Dosya yükleme izniniz yok. Lütfen Firebase projenizin Storage > Rules bölümünden herkese yazma izni (allow read, write;) verdiğinizden emin olun.';
       } else {
         errorMessage = `Firebase Hatası: ${error.code}. Lütfen konsol loglarını kontrol edin.`;
       }
