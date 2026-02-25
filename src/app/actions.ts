@@ -7,33 +7,55 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 
 export async function handleVideoUpload(formData: FormData) {
+  console.log("handleVideoUpload Server Action started.");
   const videoFile = formData.get('video') as File;
 
-  if (!videoFile) {
-    return { error: 'Geçersiz video dosyası.' };
+  if (!videoFile || videoFile.size === 0) {
+    console.error("No video file received or file is empty.");
+    return { error: 'Geçersiz video dosyası veya dosya boş.' };
   }
-
-  const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+  
+  console.log(`Received video file: ${videoFile.name}, size: ${videoFile.size}, type: ${videoFile.type}`);
 
   try {
+    const videoBuffer = Buffer.from(await videoFile.arrayBuffer());
+    console.log("Video file converted to buffer.");
+
     const videoId = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-    const storageRef = ref(storage, `videos/${videoId}_${videoFile.name}`);
+    const storagePath = `videos/${videoId}_${videoFile.name}`;
+    const storageRef = ref(storage, storagePath);
+    console.log(`Uploading to Firebase Storage at path: ${storagePath}`);
     
     const uploadResult = await uploadBytes(storageRef, videoBuffer, {
       contentType: videoFile.type,
     });
-    const video_url = await getDownloadURL(uploadResult.ref);
+    console.log("Successfully uploaded to Storage.");
 
+    const video_url = await getDownloadURL(uploadResult.ref);
+    console.log(`Got download URL: ${video_url}`);
+
+    console.log("Adding document to Firestore 'trees' collection.");
     await addDoc(collection(db, 'trees'), {
       video_url,
       status: 'Bekliyor',
       timestamp: serverTimestamp(),
     });
+    console.log("Successfully added document to Firestore.");
+
   } catch (error) {
-    console.error('Upload failed:', error);
-    return { error: 'Video yüklenirken bir hata oluştu. Lütfen tekrar deneyin.' };
+    console.error('--- UPLOAD FAILED ---');
+    console.error('Error object:', error);
+    if (error instanceof Error) {
+        console.error('Error name:', error.name);
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+    }
+    console.error('--- END OF ERROR ---');
+    const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu.';
+    return { error: `Video yüklenirken sunucu hatası oluştu: ${errorMessage}` };
   }
 
+  console.log("Upload complete. Revalidating path and redirecting.");
   revalidatePath('/');
   redirect('/');
 }
