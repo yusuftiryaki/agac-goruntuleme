@@ -10,6 +10,7 @@ import { Hourglass, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation';
 
 async function getTreeData(id: string): Promise<Tree | null> {
   try {
@@ -36,21 +37,24 @@ const getStatusVariant = (status: TreeStatus) => {
 };
 
 
-export default function TreeDetailPage({ params }: { params: { id: string } }) {
+export default function TreeDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const [tree, setTree] = useState<Tree | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getTreeData(params.id).then(treeData => {
-      if (!treeData) {
-        setTree(null);
-      } else {
-        setTree(treeData);
-      }
-      setLoading(false);
-    });
-
-  }, [params.id]);
+    if (id) {
+      getTreeData(id).then(treeData => {
+        if (!treeData) {
+          setTree(null);
+        } else {
+          setTree(treeData);
+        }
+        setLoading(false);
+      });
+    }
+  }, [id]);
 
   if (loading) {
     return (
