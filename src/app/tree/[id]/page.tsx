@@ -1,20 +1,21 @@
+'use client';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
-import { notFound } from 'next/navigation';
+import { notFound, useRouter } from 'next/navigation';
 import { Header } from '@/components/layout/Header';
 import { ModelViewer } from '@/components/tree/ModelViewer';
 import type { Tree, TreeStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Hourglass } from 'lucide-react';
+import { Hourglass, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect, useState } from 'react';
 
-export const revalidate = 30; // Revalidate every 30 seconds
-
-async function getTreeData(id: string): Promise<Tree | null> {
+async function getTreeData(userId: string, id: string): Promise<Tree | null> {
   try {
-    const docRef = doc(db, 'trees', id);
+    const docRef = doc(db, 'users', userId, 'trees', id);
     const docSnap = await getDoc(docRef);
 
     if (!docSnap.exists()) {
@@ -37,11 +38,53 @@ const getStatusVariant = (status: TreeStatus) => {
 };
 
 
-export default async function TreeDetailPage({ params }: { params: { id: string } }) {
-  const tree = await getTreeData(params.id);
+export default function TreeDetailPage({ params }: { params: { id: string } }) {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const [tree, setTree] = useState<Tree | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    if (authLoading) {
+      return;
+    }
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+    
+    getTreeData(user.uid, params.id).then(treeData => {
+      if (!treeData) {
+        setTree(null);
+      } else {
+        setTree(treeData);
+      }
+      setLoading(false);
+    });
+
+  }, [params.id, user, authLoading, router]);
+
+  if (loading || authLoading) {
+    return (
+       <div className="flex min-h-screen w-full flex-col">
+        <Header />
+        <main className="flex-1 container py-8 flex items-center justify-center">
+            <Loader2 className="w-12 h-12 text-primary animate-spin" />
+        </main>
+      </div>
+    )
+  }
+  
   if (!tree) {
-    notFound();
+     return (
+       <div className="flex min-h-screen w-full flex-col">
+        <Header />
+        <main className="flex-1 container py-8 text-center">
+            <h1 className="text-2xl font-bold">Ağaç Bulunamadı</h1>
+            <p className="text-muted-foreground">Aradığınız ağaç mevcut değil veya bu ağacı görme yetkiniz yok.</p>
+        </main>
+      </div>
+    )
   }
 
   return (

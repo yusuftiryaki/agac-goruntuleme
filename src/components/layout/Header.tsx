@@ -1,8 +1,18 @@
+'use client';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Camera } from 'lucide-react';
+import { Camera, LogIn, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
+import { auth } from '@/lib/firebase/client';
+import { signOut } from 'firebase/auth';
 
 export function Header() {
+  const { user } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut(auth);
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-14 items-center">
@@ -14,12 +24,42 @@ export function Header() {
             <span className="font-bold">PistachioTwin</span>
           </Link>
         </div>
+        
+        <nav className="hidden flex-1 items-center justify-end space-x-4 md:flex">
+          {user ? (
+            <Button onClick={handleSignOut} variant="ghost">
+              <LogOut className="mr-2 h-4 w-4" />
+              Çıkış Yap
+            </Button>
+          ) : (
+            <Button asChild variant="ghost">
+              <Link href="/login">
+                <LogIn className="mr-2 h-4 w-4" />
+                Giriş Yap
+              </Link>
+            </Button>
+          )}
+        </nav>
+
         <div className="flex flex-1 items-center justify-end space-x-2 md:hidden">
-          <Button asChild size="icon" variant="ghost">
-            <Link href="/scan" aria-label="Yeni tarama">
-              <Camera className="h-5 w-5" />
-            </Link>
-          </Button>
+          {user && (
+            <Button asChild size="icon" variant="ghost">
+              <Link href="/scan" aria-label="Yeni tarama">
+                <Camera className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
+          {user ? (
+             <Button onClick={handleSignOut} size="icon" variant="ghost">
+                <LogOut className="h-5 w-5" />
+             </Button>
+          ) : (
+            <Button asChild size="icon" variant="ghost">
+              <Link href="/login" aria-label="Giriş Yap">
+                <LogIn className="h-5 w-5" />
+              </Link>
+            </Button>
+          )}
         </div>
       </div>
     </header>

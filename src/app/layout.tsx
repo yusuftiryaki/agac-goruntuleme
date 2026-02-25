@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
+import { AuthProvider } from '@/hooks/use-auth';
 
 const APP_NAME = "PistachioTwin";
 const APP_DESCRIPTION = "Fıstık ağacı dijital ikiz üretimi için PWA.";
@@ -38,8 +39,10 @@ export default function RootLayout({
         <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js" async></script>
       </head>
       <body className="font-body antialiased">
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );
