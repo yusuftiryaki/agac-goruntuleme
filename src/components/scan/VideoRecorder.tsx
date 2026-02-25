@@ -88,63 +88,59 @@ export function VideoRecorder() {
     }
   }, [status, recordedChunks, toast]);
 
-  const renderContent = () => {
-    switch (status) {
-      case 'idle':
-        return (
-          <div className="text-center">
-            <VideoOff className="mx-auto h-12 w-12 text-muted-foreground" />
-            <p className="mt-2 text-muted-foreground">Kamera başlatılmadı.</p>
-            <Button onClick={getCameraPermission} className="mt-4">
-              <Camera className="mr-2 h-4 w-4" /> Kamerayı Başlat
-            </Button>
-          </div>
-        );
-      case 'getting-permission':
-        return (
-          <div className="text-center">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-2 text-muted-foreground">Kamera izni isteniyor...</p>
-          </div>
-        );
-      case 'ready':
-      case 'recording':
-        return (
-          <>
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              className="h-full w-full object-cover"
-            />
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
-              {status === 'ready' ? (
-                <Button onClick={startRecording} size="lg" className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700">
-                  <Circle className="h-8 w-8 fill-white" />
-                </Button>
-              ) : (
-                <Button onClick={stopRecording} size="lg" className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700 animate-pulse">
-                  <Square className="h-8 w-8 fill-white" />
-                </Button>
-              )}
-            </div>
-          </>
-        );
-      case 'processing':
-        return (
-          <div className="text-center">
-            <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
-            <p className="mt-2 text-muted-foreground">Video işleniyor...</p>
-          </div>
-        );
-    }
-  };
-
   return (
     <Card className="w-full max-w-lg aspect-square overflow-hidden">
       <CardContent className="p-0 h-full w-full flex items-center justify-center relative bg-muted">
-        {renderContent()}
+        {/* Video element is always rendered to ensure ref is available */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          playsInline
+          className="h-full w-full object-cover"
+        />
+
+        {/* Overlays for different states */}
+        {(status === 'idle' || status === 'getting-permission' || status === 'processing') && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-muted p-4 text-center">
+            {status === 'idle' && (
+              <>
+                <VideoOff className="mx-auto h-12 w-12 text-muted-foreground" />
+                <p className="mt-2 text-muted-foreground">Kamera başlatılmadı.</p>
+                <Button onClick={getCameraPermission} className="mt-4">
+                  <Camera className="mr-2 h-4 w-4" /> Kamerayı Başlat
+                </Button>
+              </>
+            )}
+            {status === 'getting-permission' && (
+              <>
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                <p className="mt-2 text-muted-foreground">Kamera izni isteniyor...</p>
+              </>
+            )}
+            {status === 'processing' && (
+              <>
+                <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+                <p className="mt-2 text-muted-foreground">Video işleniyor...</p>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* Recording controls, visible when camera is active */}
+        {(status === 'ready' || status === 'recording') && (
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10">
+            {status === 'ready' ? (
+              <Button onClick={startRecording} size="lg" className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700">
+                <Circle className="h-8 w-8 fill-white" />
+              </Button>
+            ) : (
+              <Button onClick={stopRecording} size="lg" className="rounded-full w-20 h-20 bg-red-600 hover:bg-red-700 animate-pulse">
+                <Square className="h-8 w-8 fill-white" />
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
