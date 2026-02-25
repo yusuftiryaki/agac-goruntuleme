@@ -33,7 +33,7 @@ const videoAnalysisTagPrompt = ai.definePrompt({
   name: 'videoAnalysisTagPrompt',
   input: { schema: VideoAnalysisTagGenerationInputSchema },
   output: { schema: VideoAnalysisTagGenerationOutputSchema },
-  model: googleAI.model('gemini-2.5-flash-image'), // Use a multimodal model capable of processing media
+  model: googleAI.model('gemini-1.5-flash'), // Use a multimodal model capable of processing media
   prompt: `You are an expert botanist specializing in pistachio trees. Your task is to analyze the provided video of a pistachio tree and extract key descriptive tags about its condition.
 
 Focus on aspects such as:
