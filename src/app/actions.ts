@@ -42,7 +42,7 @@ export async function handleVideoUpload(formData: FormData) {
     });
     console.log("Successfully added document to Firestore.");
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('--- UPLOAD FAILED ---');
     console.error('Error object:', error);
     if (error instanceof Error) {
@@ -51,7 +51,19 @@ export async function handleVideoUpload(formData: FormData) {
         console.error('Error stack:', error.stack);
     }
     console.error('--- END OF ERROR ---');
-    const errorMessage = error instanceof Error ? error.message : 'Bilinmeyen bir hata oluştu.';
+    
+    let errorMessage = 'Bilinmeyen bir hata oluştu.';
+    if (typeof error === 'object' && error !== null && 'code' in error) {
+      // Firebase hatalarını daha anlaşılır hale getir
+      if (error.code === 'storage/unauthorized') {
+        errorMessage = 'Dosya yükleme izniniz yok. Lütfen Firebase projenizin Storage > Rules bölümünden herkese yazma izni verdiğinizden emin olun.';
+      } else {
+        errorMessage = `Firebase Hatası: ${error.code}. Lütfen konsol loglarını kontrol edin.`;
+      }
+    } else if (error instanceof Error) {
+        errorMessage = error.message;
+    }
+
     return { error: `Video yüklenirken sunucu hatası oluştu: ${errorMessage}` };
   }
 
