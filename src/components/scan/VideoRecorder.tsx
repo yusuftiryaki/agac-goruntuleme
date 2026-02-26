@@ -46,13 +46,32 @@ export function VideoRecorder() {
   const startRecording = () => {
     if (stream && status === 'ready') {
       setStatus('recording');
-      const mimeType = MediaRecorder.isTypeSupported('video/webm; codecs=vp9') 
-        ? 'video/webm; codecs=vp9' 
-        : MediaRecorder.isTypeSupported('video/webm') 
-        ? 'video/webm' 
-        : 'video/mp4';
 
-      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+      const mimeTypes = [
+        'video/mp4; codecs=h264',
+        'video/mp4; codecs=avc1',
+        'video/webm; codecs=vp9',
+        'video/webm; codecs=vp8',
+        'video/webm',
+        'video/mp4',
+      ];
+      
+      const supportedMimeType = mimeTypes.find(type => MediaRecorder.isTypeSupported(type));
+
+      if (!supportedMimeType) {
+        console.error("No supported MIME type found for MediaRecorder");
+        toast({
+          variant: 'destructive',
+          title: 'Kayıt Başlatılamadı',
+          description: 'Tarayıcınızda desteklenen bir video formatı bulunamadı.',
+        });
+        setStatus('ready');
+        return;
+      }
+      
+      console.log(`Kullanılan MIME türü: ${supportedMimeType}`);
+
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: supportedMimeType });
       
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -76,7 +95,7 @@ export function VideoRecorder() {
     if (status === 'processing' && recordedChunks.length > 0) {
       const mimeType = recordedChunks[0].type;
       const blob = new Blob(recordedChunks, { type: mimeType });
-      const fileExtension = mimeType.split('/')[1]?.split(';')[0] || 'mp4';
+      const fileExtension = mimeType.includes('mp4') ? 'mp4' : 'webm';
       const fileName = `pistachio-scan.${fileExtension}`;
       
       const formData = new FormData();
