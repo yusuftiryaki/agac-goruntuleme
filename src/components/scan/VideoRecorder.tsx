@@ -21,9 +21,11 @@ export function VideoRecorder() {
     setStatus('getting-permission');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { 
-          facingMode: 'environment',
-          frameRate: { ideal: 1 }
+        video: {
+          facingMode: "environment", // Arka kamerayı zorla
+          width: { ideal: 1920 },    // 1080p çözünürlük idealdir (4K, Colab'ı boğar)
+          height: { ideal: 1080 },
+          frameRate: { ideal: 30 }   // Bulanıklığı önlemek için 30 FPS
         },
         audio: false,
       });
