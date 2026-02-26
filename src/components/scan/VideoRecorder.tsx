@@ -21,7 +21,10 @@ export function VideoRecorder() {
     setStatus('getting-permission');
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' },
+        video: { 
+          facingMode: 'environment',
+          frameRate: { ideal: 1 }
+        },
         audio: false,
       });
       if (videoRef.current) {
@@ -43,7 +46,14 @@ export function VideoRecorder() {
   const startRecording = () => {
     if (stream && status === 'ready') {
       setStatus('recording');
-      mediaRecorderRef.current = new MediaRecorder(stream);
+      const mimeType = MediaRecorder.isTypeSupported('video/webm; codecs=vp9') 
+        ? 'video/webm; codecs=vp9' 
+        : MediaRecorder.isTypeSupported('video/webm') 
+        ? 'video/webm' 
+        : 'video/mp4';
+
+      mediaRecorderRef.current = new MediaRecorder(stream, { mimeType });
+      
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
           setRecordedChunks((prev) => [...prev, event.data]);
