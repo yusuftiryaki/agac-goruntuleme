@@ -107,10 +107,17 @@ export default function TreeDetailPage() {
                   </div>
                 )}
                  <div className="text-sm text-muted-foreground">
-                    <h3 className="font-semibold mb-2 text-foreground">Video Kaynağı</h3>
-                    <a href={tree.video_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline break-all">
-                      {tree.video_url}
-                    </a>
+                    <h3 className="font-semibold mb-2 text-foreground">Video Kaydı</h3>
+                    {tree.video_url && (
+                      <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                         <video 
+                            src={tree.video_url} 
+                            controls 
+                            className="w-full h-full"
+                            playsInline
+                         />
+                      </div>
+                    )}
                 </div>
               </CardContent>
             </Card>
