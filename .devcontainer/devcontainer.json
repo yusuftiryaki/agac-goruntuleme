@@ -1,0 +1,13 @@
+{
+  "name": "agac-goruntuleme-dev",
+  "build": {
+    "dockerfile": "../.devcontainer/Dockerfile",
+    "context": ".."
+  },
+  "settings": {
+    "terminal.integrated.shell.linux": "/bin/bash"
+  },
+  "postCreateCommand": "chmod +x .devcontainer/postCreate.sh && .devcontainer/postCreate.sh",
+  "forwardPorts": [9002],
+  "remoteUser": "node"
+}

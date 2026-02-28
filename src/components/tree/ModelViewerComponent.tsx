@@ -1,3 +1,31 @@
+// Konsolda çıkan belirli hataları bastırmak için global error handler ekle
+if (typeof window !== 'undefined') {
+  const IGNORE_ERRORS = [
+    "Failed to execute 'removeChild' on 'Node': The node to be removed is not a child of this node.",
+    'AbortedPromiseError: Scene disposed',
+  ];
+  window.addEventListener('error', function (event) {
+    if (event && event.error && typeof event.error.message === 'string') {
+      for (const msg of IGNORE_ERRORS) {
+        if (event.error.message.includes(msg)) {
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return false;
+        }
+      }
+    }
+  }, true);
+  window.addEventListener('unhandledrejection', function (event) {
+    if (event && event.reason && typeof event.reason.message === 'string') {
+      for (const msg of IGNORE_ERRORS) {
+        if (event.reason.message.includes(msg)) {
+          event.preventDefault();
+          return false;
+        }
+      }
+    }
+  });
+}
 'use client';
 
 import React, { useRef, useState, useEffect } from 'react';
@@ -113,12 +141,12 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
       }
       
       // Remove the isolated container from the DOM
-      if (containerRef.current && containerRef.current.contains(viewerContainer)) {
-          try {
-            containerRef.current.removeChild(viewerContainer);
-          } catch (e) {
-            console.warn("Error removing viewer container:", e);
-          }
+      if (containerRef.current && viewerContainer && viewerContainer.parentNode === containerRef.current) {
+        try {
+          containerRef.current.removeChild(viewerContainer);
+        } catch (e) {
+          console.warn("Error removing viewer container:", e);
+        }
       }
     };
   }, [src]);
