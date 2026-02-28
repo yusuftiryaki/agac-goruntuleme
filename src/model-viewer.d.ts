@@ -27,3 +27,6 @@ interface ModelViewerElement extends HTMLElement {
   } | null;
   toScreenPosition(position: { x: number, y: number, z: number }): { x: number, y: number } | null;
 }
+
+declare module 'three';
+declare module '@mkkellogg/gaussian-splats-3d';
