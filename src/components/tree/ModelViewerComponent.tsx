@@ -11,41 +11,44 @@ interface ModelViewerProps {
 
 export default function ModelViewerComponent({ src }: ModelViewerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const viewerRef = useRef<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const viewerRef = useRef<any>(null);
 
   useEffect(() => {
     if (!containerRef.current || !src) return;
 
-    let viewer: any = null;
     let isMounted = true;
-    let abortController = new AbortController();
+    
+    // Create a dedicated container element for the viewer to isolate DOM manipulations
+    const viewerContainer = document.createElement('div');
+    viewerContainer.style.width = '100%';
+    viewerContainer.style.height = '100%';
+    viewerContainer.style.position = 'absolute';
+    viewerContainer.style.top = '0';
+    viewerContainer.style.left = '0';
+    
+    // Append to the React-managed container
+    containerRef.current.appendChild(viewerContainer);
 
     const initViewer = async () => {
       try {
         setIsLoading(true);
         setError(null);
 
-        // Clean up container manually to prevent DOM conflicts
-        if (containerRef.current) {
-            containerRef.current.innerHTML = '';
-        }
-
-        // Create the viewer
-        viewer = new GaussianSplats3D.Viewer({
-          'rootElement': containerRef.current,
+        // Initialize the viewer attached to our isolated container
+        const viewer = new GaussianSplats3D.Viewer({
+          'rootElement': viewerContainer,
           'cameraUp': [0, -1, 0],
           'initialCameraPosition': [0, -2, 5],
           'initialCameraLookAt': [0, 0, 0],
           'selfDrivenMode': true,
           'useBuiltInControls': true,
-          // 'ignoreDevicePixelRatio': false,
         });
         
         viewerRef.current = viewer;
 
-        // Handle URL for splat loading
+        // Fix URL for splat detection
         let splatSrc = src;
         const lowerSrc = src.toLowerCase();
         if (!lowerSrc.endsWith('.splat') && !lowerSrc.endsWith('.ksplat')) {
@@ -57,12 +60,9 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
             }
         }
 
-        if (!isMounted) {
-            viewer.dispose();
-            return;
-        }
+        if (!isMounted) return;
 
-        // Load the splat scene
+        // Load the scene
         await viewer.addSplatScene(splatSrc, {
           'splatAlphaRemovalThreshold': 5,
           'showLoadingUI': false,
@@ -75,28 +75,25 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
         if (isMounted) {
             viewer.start();
             setIsLoading(false);
-        } else {
-             // If unmounted during load, dispose immediately
-             viewer.dispose();
         }
 
       } catch (err: any) {
-        console.error("Error initializing splat viewer:", err);
-        if (isMounted) {
-             // Check if it's the specific format error
-            let errorMessage = err.message || "Bilinmeyen hata";
-            if (errorMessage.includes("File format not supported")) {
-                errorMessage = "Dosya formatı algılanamadı veya desteklenmiyor.";
-            } else if (errorMessage.includes("Scene disposed")) {
-                // Ignore scene disposed errors during init as they might be race conditions
-                return; 
-            }
-            setError("Model yüklenirken bir hata oluştu: " + errorMessage);
-            setIsLoading(false);
+        // If the error is "Scene disposed", it's a non-critical error that can happen
+        // when the component unmounts during loading. We can safely ignore it.
+        if (err.message && err.message.includes('Scene disposed')) {
+          console.log('Splat viewer load cancelled during navigation.');
+          return;
         }
-        // If an error occurred, we should probably dispose the partial viewer
-        if (viewer) {
-            try { viewer.dispose(); } catch(e) {}
+        
+        // For all other errors, log them and update the UI.
+        console.error("Splat viewer init error:", err);
+        if (isMounted) {
+          let errorMessage = err.message || "Bilinmeyen hata";
+          if (errorMessage.includes("File format not supported")) {
+              errorMessage = "Dosya formatı desteklenmiyor (.splat veya .ksplat).";
+          }
+          setError(errorMessage);
+          setIsLoading(false);
         }
       }
     };
@@ -105,39 +102,42 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
 
     return () => {
       isMounted = false;
-      abortController.abort();
+      // Cleanup: Dispose viewer
       if (viewerRef.current) {
          try {
              viewerRef.current.dispose();
          } catch(e) {
-             console.warn("Error disposing viewer:", e);
+             console.warn("Viewer dispose error:", e);
          }
          viewerRef.current = null;
       }
-      // Manually clear container to avoid React removal issues if the library messed with DOM
-      if (containerRef.current) {
-          containerRef.current.innerHTML = '';
+      
+      // Remove the isolated container from the DOM
+      if (containerRef.current && containerRef.current.contains(viewerContainer)) {
+          try {
+            containerRef.current.removeChild(viewerContainer);
+          } catch (e) {
+            console.warn("Error removing viewer container:", e);
+          }
       }
     };
   }, [src]);
 
   const handleResetView = () => {
-    if(viewerRef.current) {
+      if (viewerRef.current && viewerRef.current.camera) {
          try {
-            if (viewerRef.current.camera) {
-                 viewerRef.current.camera.position.set(0, -2, 5);
-                 viewerRef.current.camera.lookAt(0, 0, 0);
-                 viewerRef.current.camera.up.set(0, -1, 0);
-            }
+             viewerRef.current.camera.position.set(0, -2, 5);
+             viewerRef.current.camera.lookAt(0, 0, 0);
+             viewerRef.current.camera.up.set(0, -1, 0);
          } catch(e) {
-             console.log("Could not reset view manually", e);
+             console.log("Reset view error", e);
          }
-    }
+      }
   };
 
   return (
     <div className="relative w-full h-full min-h-[400px] bg-slate-900 rounded-lg overflow-hidden group">
-      {/* Container for the 3D canvas. We use a key to force re-creation if src changes drastically, though here we rely on useEffect cleanup */}
+      {/* React controls this div. We append a child to it manually. */}
       <div ref={containerRef} className="absolute inset-0 w-full h-full" />
       
       {isLoading && (
