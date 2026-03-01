@@ -42,6 +42,7 @@ export default function TreeDetailPage() {
   const id = params.id as string;
   const [tree, setTree] = useState<Tree | null>(null);
   const [loading, setLoading] = useState(true);
+  const [videoError, setVideoError] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -109,13 +110,37 @@ export default function TreeDetailPage() {
                  <div className="text-sm text-muted-foreground">
                     <h3 className="font-semibold mb-2 text-foreground">Video Kaydı</h3>
                     {tree.video_url && (
-                      <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-                         <video 
-                            src={tree.video_url} 
-                            controls 
-                            className="w-full h-full"
-                            playsInline
-                         />
+                      <div className="relative aspect-video rounded-lg overflow-hidden bg-black flex items-center justify-center">
+                         {!videoError ? (
+                           <video 
+                              key={tree.video_url}
+                              controls 
+                              className="w-full h-full"
+                              playsInline
+                              webkit-playsinline="true"
+                              preload="auto"
+                              crossOrigin="anonymous"
+                              onError={() => setVideoError(true)}
+                           >
+                              <source src={tree.video_url} type="video/mp4" />
+                              <source src={tree.video_url} type="video/webm" />
+                              Tarayıcınız video oynatmayı desteklemiyor.
+                           </video>
+                         ) : (
+                           <div className="text-center p-4">
+                             <p className="text-destructive mb-2">Video yüklenemedi.</p>
+                             <Button 
+                               variant="outline" 
+                               size="sm" 
+                               onClick={() => {
+                                 setVideoError(false);
+                                 window.location.reload();
+                               }}
+                             >
+                               Yeniden Dene
+                             </Button>
+                           </div>
+                         )}
                       </div>
                     )}
                 </div>

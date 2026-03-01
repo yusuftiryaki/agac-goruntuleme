@@ -44,7 +44,7 @@ export async function handleVideoUpload(formData: FormData) {
     console.log("Adding document to Firestore 'trees' collection.");
     await addDoc(collection(db, 'trees'), {
       video_url,
-      status: 'pending',
+      status: 'Bekliyor',
       timestamp: serverTimestamp(),
     });
     console.log("Successfully added document to Firestore.");

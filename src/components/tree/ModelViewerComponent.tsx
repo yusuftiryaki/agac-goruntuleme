@@ -263,25 +263,49 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (!container || activeMode === 'none') return;
+    const viewer = viewerRef.current;
+    if (!container) return;
+
+    // Ölçüm modu kapalıysa kontrolleri aç ve çık
+    if (activeMode === 'none') {
+      if (viewer?.controls) viewer.controls.enabled = true;
+      return;
+    }
+
+    // Ölçüm modu aktifse kontrolleri kapat
+    if (viewer?.controls) viewer.controls.enabled = false;
 
     const onMove = (e: MouseEvent) => {
       const rect = container.getBoundingClientRect();
       setMousePos({ x: e.clientX - rect.left, y: e.clientY - rect.top });
     };
+
+    const onDown = (e: PointerEvent) => {
+      if (e.button === 0) {
+        e.stopImmediatePropagation();
+      }
+    };
+
     const onUp = (e: PointerEvent) => {
       if (e.button === 0) {
         e.stopImmediatePropagation();
         handleSceneClick(e.clientX, e.clientY);
       }
     };
+
+    // Olayları ekle
     container.addEventListener('pointermove', onMove);
-    container.addEventListener('pointerdown', (e) => e.button === 0 && e.stopImmediatePropagation(), true);
+    container.addEventListener('pointerdown', onDown, true);
     container.addEventListener('pointerup', onUp, true);
+
     return () => {
+      // Olayları temizle
       container.removeEventListener('pointermove', onMove);
-      container.removeEventListener('pointerdown', (e) => e.stopImmediatePropagation(), true);
+      container.removeEventListener('pointerdown', onDown, true);
       container.removeEventListener('pointerup', onUp, true);
+      
+      // Kontrolleri her durumda geri yüklemeyi dene (güvenlik için)
+      if (viewer?.controls) viewer.controls.enabled = true;
     };
   }, [activeMode, handleSceneClick]);
 
