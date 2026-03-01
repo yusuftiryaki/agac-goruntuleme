@@ -1,3 +1,5 @@
+'use client';
+
 // Konsolda çıkan belirli hataları bastırmak için global error handler ekle
 if (typeof window !== 'undefined') {
   const IGNORE_ERRORS = [
@@ -26,7 +28,6 @@ if (typeof window !== 'undefined') {
     }
   });
 }
-'use client';
 
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { RotateCcw, Ruler, Trash2, X, MousePointer2, Maximize, Minimize, Circle } from 'lucide-react';
