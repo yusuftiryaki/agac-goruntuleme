@@ -29,9 +29,9 @@ async function getTreeData(id: string): Promise<Tree | null> {
 
 const getStatusVariant = (status: TreeStatus) => {
   switch (status) {
-    case 'Tamamlandı': return 'default';
-    case 'İşleniyor': return 'secondary';
-    case 'Bekliyor': return 'outline';
+    case 'completed': return 'default';
+    case 'processing': return 'secondary';
+    case 'pending': return 'outline';
     default: return 'outline';
   }
 };
@@ -153,7 +153,7 @@ export default function TreeDetailPage() {
                 <CardTitle>3D Model</CardTitle>
               </CardHeader>
               <CardContent className="aspect-square">
-                {tree.status === 'Tamamlandı' && tree.model_url ? (
+                {tree.status === 'completed' && tree.model_url ? (
                   <ModelViewer src={tree.model_url} />
                 ) : (
                   <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg text-center p-4">

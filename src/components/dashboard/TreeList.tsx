@@ -65,11 +65,11 @@ export function TreeList() {
   
   const getStatusVariant = (status: TreeStatus) => {
     switch (status) {
-      case 'Tamamlandı':
+      case 'completed':
         return 'default';
-      case 'İşleniyor':
+      case 'processing':
         return 'secondary';
-      case 'Bekliyor':
+      case 'pending':
         return 'outline';
       default:
         return 'outline';

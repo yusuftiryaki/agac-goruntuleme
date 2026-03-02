@@ -1,6 +1,6 @@
 import type { Timestamp } from 'firebase/firestore';
 
-export type TreeStatus = 'Bekliyor' | 'İşleniyor' | 'Tamamlandı';
+export type TreeStatus = 'pending' | 'processing' | 'completed';
 
 export type Tree = {
   id: string;
