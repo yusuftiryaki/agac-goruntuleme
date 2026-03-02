@@ -4,4 +4,10 @@
 runConfig:
   # Increase this value if you'd like to automatically spin up
   # more instances in response to increased traffic.
-  maxInstances: 1
+  maxInstances: 1headers:
+  - source: /
+    headers:
+      - key: Cross-Origin-Opener-Policy
+        value: same-origin
+      - key: Cross-Origin-Embedder-Policy
+        value: require-corp
