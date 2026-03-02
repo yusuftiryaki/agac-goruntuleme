@@ -7,7 +7,10 @@
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"
   },
-  "postCreateCommand": "chmod +x .devcontainer/postCreate.sh && .devcontainer/postCreate.sh",
+  "postCreateCommand": "chmod +x .devcontainer/postCreate.sh && .devcontainer/postCreate.sh && chmod +x .devcontainer/token.sh && .devcontainer/token.sh",
   "forwardPorts": [9002],
-  "remoteUser": "node"
+  "remoteUser": "node",
+  "remoteEnv": {
+    "GOOGLE_APPLICATION_CREDENTIALS": "/workspaces/agac-goruntuleme$/.private-keys/firebase.json"
+  }
 }
