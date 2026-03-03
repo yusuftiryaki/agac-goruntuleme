@@ -1,28 +1,36 @@
 # See https://hub.docker.com/_/node for available versions
 FROM node:20-bullseye
 
-# Create app directory
-WORKDIR /workspace
-
-# Install dependencies (if any system dependencies are needed, add here)
+# 1. SİSTEM GEREKSİNİMLERİ (Root kullanıcısı iken yapılır)
 RUN apt-get update && apt-get install -y \
     git \
     sudo \
     && rm -rf /var/lib/apt/lists/*
 
-# Add node user to sudo group and allow passwordless sudo
+# Node kullanıcısına sudo yetkisi ver
 RUN echo "node ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/node && \
     adduser node sudo
 
+# 2. ÇALIŞMA DİZİNİ HAZIRLIĞI
+# ÖNEMLİ: WORKDIR komutu klasörü yoksa 'root' olarak oluşturur.
+# Bunu engellemek için önce klasörü oluşturup sahibini 'node' yapıyoruz.
+RUN mkdir -p /workspace && chown node:node /workspace
+WORKDIR /workspace
 
-# Copy package files and install node modules early for caching
-COPY package*.json ./
+# 3. KULLANICI DEĞİŞİMİ
+# Artık root yetkisine ihtiyacımız kalmadı, 'node' kullanıcısına geçiyoruz.
+USER node
+
+# 4. BAĞIMLILIKLARIN KURULUMU
+# Sadece package dosyalarını, sahibini 'node' yaparak kopyalıyoruz.
+COPY --chown=node:node package*.json ./
+
+# npm install komutu artık 'node' kullanıcısı tarafından çalıştırılıyor.
+# Bu sayede 'node_modules' içindeki her şey baştan 'node' kullanıcısına ait oluyor.
 RUN npm install --legacy-peer-deps
 
-# Copy the rest of the application
-COPY . .
+# 5. PROJE DOSYALARINI KOPYALAMA
+# Geri kalan tüm dosyaları anında 'node' yetkisiyle içeri alıyoruz.
+COPY --chown=node:node . .
 
-
-# Set correct permissions for workspace directory
-RUN chown -R node:node /workspace
-USER node
+# ARTIK "RUN chown -R node:node /workspace" KOMUTUNA İHTİYAÇ YOK!
