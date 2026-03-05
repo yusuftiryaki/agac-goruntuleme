@@ -3,10 +3,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { Header } from '@/components/layout/Header';
 import { ModelViewer } from '@/components/tree/ModelViewer';
-import type { Tree, TreeStatus } from '@/types';
+import type { Tree, TreeStatus, TreeMeasurements } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Hourglass, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Hourglass, Loader2, Download, QrCode, Ruler, TreePine, CircleDot, Move, Layers, ArrowUpFromDot } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
@@ -95,6 +96,13 @@ export default function TreeDetailPage() {
                 <CardDescription>
                   Kayıt Tarihi: {tree.timestamp ? format(tree.timestamp.toDate(), "d MMMM yyyy, HH:mm", { locale: tr }) : 'Bilinmiyor'}
                 </CardDescription>
+                {tree.qr_code && (
+                  <div className="flex items-center gap-2 mt-2">
+                    <QrCode className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm text-muted-foreground">QR Kod: </span>
+                    <Badge variant={tree.qr_code === 'unknown' ? 'destructive' : 'outline'}>{tree.qr_code}</Badge>
+                  </div>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
                 {tree.tags && tree.tags.length > 0 && (
@@ -146,11 +154,128 @@ export default function TreeDetailPage() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Ölçüm Sonuçları Kartı */}
+            {tree.measurements && tree.status === 'completed' && (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Ruler className="h-5 w-5" />
+                    Ölçüm Sonuçları
+                  </CardTitle>
+                  <CardDescription>3D nokta bulutundan hesaplanan metrikler</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 gap-3">
+                    {tree.measurements.height_m != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <TreePine className="h-4 w-4 text-green-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Ağaç Boyu</p>
+                          <p className="font-semibold">{tree.measurements.height_m} m</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.diameter_cm != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <CircleDot className="h-4 w-4 text-amber-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Gövde Çapı</p>
+                          <p className="font-semibold">{tree.measurements.diameter_cm} cm</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.volume_m3 != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Layers className="h-4 w-4 text-blue-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Hacmi</p>
+                          <p className="font-semibold">{tree.measurements.volume_m3} m³</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.crown_diameter_m != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Move className="h-4 w-4 text-emerald-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Çapı</p>
+                          <p className="font-semibold">{tree.measurements.crown_diameter_m} m</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.crown_surface_area_m2 != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Layers className="h-4 w-4 text-teal-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Yüzey Alanı</p>
+                          <p className="font-semibold">{tree.measurements.crown_surface_area_m2} m²</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.crown_base_height_m != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <ArrowUpFromDot className="h-4 w-4 text-orange-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Tabanı Yüks.</p>
+                          <p className="font-semibold">{tree.measurements.crown_base_height_m} m</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.trunk_lean_deg != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Move className="h-4 w-4 text-red-500 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Gövde Eğikliği</p>
+                          <p className="font-semibold">{tree.measurements.trunk_lean_deg}°</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.crown_asymmetry_index != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <CircleDot className="h-4 w-4 text-purple-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Asimetrisi</p>
+                          <p className="font-semibold">{tree.measurements.crown_asymmetry_index}</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.fractal_score != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Layers className="h-4 w-4 text-indigo-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Fraktal Skoru</p>
+                          <p className="font-semibold">{tree.measurements.fractal_score}</p>
+                        </div>
+                      </div>
+                    )}
+                    {tree.measurements.crown_density_pts_m3 != null && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <Layers className="h-4 w-4 text-cyan-600 shrink-0" />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Taç Yoğunluğu</p>
+                          <p className="font-semibold">{tree.measurements.crown_density_pts_m3.toLocaleString('tr-TR')} n/m³</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
           <div>
             <Card>
               <CardHeader>
-                <CardTitle>3D Model</CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle>3D Model</CardTitle>
+                  {tree.ply_url && (
+                    <a href={tree.ply_url} download target="_blank" rel="noopener noreferrer">
+                      <Button variant="outline" size="sm">
+                        <Download className="mr-2 h-4 w-4" />
+                        PLY İndir
+                      </Button>
+                    </a>
+                  )}
+                </div>
               </CardHeader>
               <CardContent className="aspect-square">
                 {tree.status === 'completed' && tree.model_url ? (
