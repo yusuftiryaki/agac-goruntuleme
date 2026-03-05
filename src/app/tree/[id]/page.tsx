@@ -117,16 +117,14 @@ export default function TreeDetailPage() {
           )}
         </Card>
 
-        {/* ── Video & 3D Model ── */}
-        <div className="grid gap-6 lg:grid-cols-2">
-          {/* Video */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Video Kaydı</CardTitle>
-            </CardHeader>
+        {/* ── Video ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base">Video Kaydı</CardTitle>
+          </CardHeader>
             <CardContent>
               {tree.video_url ? (
-                <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+                <div className="relative aspect-video rounded-lg overflow-hidden bg-black max-w-3xl mx-auto">
                   {!videoError ? (
                     <video
                       key={tree.video_url}
@@ -157,38 +155,37 @@ export default function TreeDetailPage() {
                 </div>
               )}
             </CardContent>
-          </Card>
+        </Card>
 
-          {/* 3D Model */}
-          <Card>
-            <CardHeader className="pb-3">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-base">3D Model</CardTitle>
-                {tree.ply_url && (
-                  <a href={tree.ply_url} download target="_blank" rel="noopener noreferrer">
-                    <Button variant="outline" size="sm">
-                      <Download className="mr-2 h-4 w-4" />
-                      PLY İndir
-                    </Button>
-                  </a>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="aspect-video rounded-lg overflow-hidden">
-                {tree.status === 'completed' && tree.model_url ? (
-                  <ModelViewer src={tree.model_url} />
-                ) : (
-                  <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg text-center p-4">
-                    <Hourglass className="w-10 h-10 text-primary mb-3 animate-pulse" />
-                    <p className="font-medium">Model oluşturuluyor...</p>
-                    <p className="text-muted-foreground text-xs mt-1">Bu işlem biraz zaman alabilir.</p>
-                  </div>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+        {/* ── 3D Model ── */}
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-base">3D Model</CardTitle>
+              {tree.ply_url && (
+                <a href={tree.ply_url} download target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="sm">
+                    <Download className="mr-2 h-4 w-4" />
+                    PLY İndir
+                  </Button>
+                </a>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg overflow-hidden" style={{ height: '70vh', minHeight: '500px' }}>
+              {tree.status === 'completed' && tree.model_url ? (
+                <ModelViewer src={tree.model_url} />
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full bg-muted/50 rounded-lg text-center p-4">
+                  <Hourglass className="w-10 h-10 text-primary mb-3 animate-pulse" />
+                  <p className="font-medium">Model oluşturuluyor...</p>
+                  <p className="text-muted-foreground text-xs mt-1">Bu işlem biraz zaman alabilir.</p>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* ── Ölçüm Kartları ── */}
         <div className="grid gap-6 md:grid-cols-2">
