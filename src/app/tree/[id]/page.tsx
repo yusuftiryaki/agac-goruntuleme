@@ -435,6 +435,32 @@ export default function TreeDetailPage() {
                     </div>
                   )}
 
+                  {/* Polar Diyagram ve Skeleton View Görselleri */}
+                  {(tree.branch_analysis.polar_diagram_url || tree.branch_analysis.skeleton_view_url) && (
+                    <div className="space-y-4">
+                      {tree.branch_analysis.polar_diagram_url && (
+                        <div className="rounded-lg overflow-hidden border">
+                          <p className="text-xs text-muted-foreground px-3 pt-2 pb-1 bg-muted/30">Polar Diyagram (Dal Dağılımı)</p>
+                          <img
+                            src={tree.branch_analysis.polar_diagram_url}
+                            alt="Dal dağılımı polar diyagramı"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      )}
+                      {tree.branch_analysis.skeleton_view_url && (
+                        <div className="rounded-lg overflow-hidden border">
+                          <p className="text-xs text-muted-foreground px-3 pt-2 pb-1 bg-muted/30">Dallanma Şeması (2D Skeleton)</p>
+                          <img
+                            src={tree.branch_analysis.skeleton_view_url}
+                            alt="Dallanma şeması 2D görünüm"
+                            className="w-full h-auto"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   {/* Sağlık Notları */}
                   {tree.branch_analysis.health_notes && tree.branch_analysis.health_notes.length > 0 && (
                     <div className="space-y-2">

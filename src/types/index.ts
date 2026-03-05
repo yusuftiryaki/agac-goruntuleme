@@ -38,6 +38,8 @@ export type BranchAnalysis = {
     W: number;
   };
   branch_details: BranchDetail[];
+  polar_diagram_url?: string;
+  skeleton_view_url?: string;
 };
 
 export type ColorAnalysis = {
