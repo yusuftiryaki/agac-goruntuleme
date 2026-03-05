@@ -3,11 +3,11 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase/client';
 import { Header } from '@/components/layout/Header';
 import { ModelViewer } from '@/components/tree/ModelViewer';
-import type { Tree, TreeStatus, TreeMeasurements } from '@/types';
+import type { Tree, TreeStatus, TreeMeasurements, BranchAnalysis, ColorAnalysis } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Hourglass, Loader2, Download, QrCode, Ruler, TreePine, CircleDot, Move, Layers, ArrowUpFromDot } from 'lucide-react';
+import { Hourglass, Loader2, Download, QrCode, Ruler, TreePine, CircleDot, Move, Layers, ArrowUpFromDot, GitBranch, Compass, AlertTriangle, Palette, Heart, Leaf, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 import { useEffect, useState } from 'react';
@@ -261,8 +261,195 @@ export default function TreeDetailPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Renk Analizi Kartı */}
+            {tree.color_analysis && tree.status === 'completed' && (
+              <Card className="mt-4">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="h-5 w-5" />
+                    Renk Analizi
+                  </CardTitle>
+                  <CardDescription>Video karelerinden hesaplanan renk metrikleri ({tree.color_analysis.analyzed_frames} kare)</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {/* Sağlık Skoru - Büyük gösterim */}
+                  <div className="flex items-center gap-4 p-4 rounded-lg bg-muted/50">
+                    <Heart className={`h-8 w-8 shrink-0 ${
+                      tree.color_analysis.health_score >= 70 ? 'text-green-600' :
+                      tree.color_analysis.health_score >= 40 ? 'text-yellow-600' : 'text-red-600'
+                    }`} />
+                    <div className="flex-1">
+                      <p className="text-sm text-muted-foreground">Sağlık Skoru</p>
+                      <div className="flex items-center gap-3">
+                        <p className="text-2xl font-bold">{tree.color_analysis.health_score}<span className="text-sm font-normal text-muted-foreground">/100</span></p>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div
+                            className={`h-full rounded-full transition-all ${
+                              tree.color_analysis.health_score >= 70 ? 'bg-green-500' :
+                              tree.color_analysis.health_score >= 40 ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}
+                            style={{ width: `${tree.color_analysis.health_score}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Leaf className="h-4 w-4 text-green-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Yeşil Oran</p>
+                        <p className="font-semibold">{(tree.color_analysis.green_fraction * 100).toFixed(1)}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Leaf className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Yeşillik İndeksi</p>
+                        <p className="font-semibold">{tree.color_analysis.greenness_index.toFixed(4)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <AlertTriangle className={`h-4 w-4 shrink-0 ${
+                        tree.color_analysis.stress_ratio > 0.3 ? 'text-red-500' : 'text-yellow-500'
+                      }`} />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Stres Oranı</p>
+                        <p className="font-semibold">{(tree.color_analysis.stress_ratio * 100).toFixed(1)}%</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Eye className="h-4 w-4 text-blue-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Renk Homojenliği</p>
+                        <p className="font-semibold">{tree.color_analysis.color_homogeneity.toFixed(3)}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <TreePine className="h-4 w-4 text-amber-700 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Gövde/Yaprak Oranı</p>
+                        <p className="font-semibold">{tree.color_analysis.trunk_leaf_ratio.toFixed(2)}</p>
+                      </div>
+                    </div>
+                    {tree.color_analysis.dominant_color_rgb && (
+                      <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                        <div
+                          className="h-4 w-4 rounded-full shrink-0 border"
+                          style={{
+                            backgroundColor: `rgb(${tree.color_analysis.dominant_color_rgb[0]}, ${tree.color_analysis.dominant_color_rgb[1]}, ${tree.color_analysis.dominant_color_rgb[2]})`
+                          }}
+                        />
+                        <div>
+                          <p className="text-xs text-muted-foreground">Baskın Renk</p>
+                          <p className="font-semibold text-xs">RGB({tree.color_analysis.dominant_color_rgb.map(c => Math.round(c)).join(', ')})</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
           <div>
+            {/* Dal Analizi Kartı */}
+            {tree.branch_analysis && tree.advanced_measurements === 'completed' && (
+              <Card className="mb-4">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <GitBranch className="h-5 w-5" />
+                    Dal Analizi (Kış Dönemi)
+                  </CardTitle>
+                  <CardDescription>Yapraklardan arındırılmış 3D modelden hesaplanan dal metrikleri</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <GitBranch className="h-4 w-4 text-green-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Ana Dal Sayısı</p>
+                        <p className="font-semibold">{tree.branch_analysis.branch_count}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Compass className="h-4 w-4 text-blue-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Ort. Dal Açısı</p>
+                        <p className="font-semibold">{tree.branch_analysis.avg_branch_angle_deg}°</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Compass className="h-4 w-4 text-amber-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Min / Max Açı</p>
+                        <p className="font-semibold">{tree.branch_analysis.min_branch_angle_deg}° / {tree.branch_analysis.max_branch_angle_deg}°</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Ruler className="h-4 w-4 text-emerald-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Ort. Dal Uzunluğu</p>
+                        <p className="font-semibold">{tree.branch_analysis.avg_branch_length_m} m</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <CircleDot className="h-4 w-4 text-purple-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Dal Simetrisi</p>
+                        <p className="font-semibold">{tree.branch_analysis.branch_symmetry_index}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
+                      <Layers className="h-4 w-4 text-cyan-600 shrink-0" />
+                      <div>
+                        <p className="text-xs text-muted-foreground">Dallanma Yoğunluğu</p>
+                        <p className="font-semibold">{tree.branch_analysis.branching_density_per_m} dal/m</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Kadran Dağılımı */}
+                  {tree.branch_analysis.quadrant_distribution && (
+                    <div className="p-3 rounded-lg bg-muted/50">
+                      <p className="text-xs text-muted-foreground mb-2">Kadran Dağılımı</p>
+                      <div className="grid grid-cols-4 gap-2 text-center">
+                        <div>
+                          <p className="text-xs text-muted-foreground">Kuzey</p>
+                          <p className="font-semibold">{tree.branch_analysis.quadrant_distribution.N}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Doğu</p>
+                          <p className="font-semibold">{tree.branch_analysis.quadrant_distribution.E}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Güney</p>
+                          <p className="font-semibold">{tree.branch_analysis.quadrant_distribution.S}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Batı</p>
+                          <p className="font-semibold">{tree.branch_analysis.quadrant_distribution.W}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Sağlık Notları */}
+                  {tree.branch_analysis.health_notes && tree.branch_analysis.health_notes.length > 0 && (
+                    <div className="space-y-2">
+                      {tree.branch_analysis.health_notes.map((note, i) => (
+                        <div key={i} className="flex items-start gap-2 p-2 rounded-lg bg-yellow-50 dark:bg-yellow-950/20">
+                          <AlertTriangle className="h-4 w-4 text-yellow-600 shrink-0 mt-0.5" />
+                          <p className="text-sm text-yellow-800 dark:text-yellow-200">{note}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
             <Card>
               <CardHeader>
                 <div className="flex justify-between items-center">

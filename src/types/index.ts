@@ -15,6 +15,42 @@ export type TreeMeasurements = {
   crown_base_height_m?: number;
 };
 
+export type BranchDetail = {
+  angle_deg: number;
+  azimuth_deg: number;
+  length_m: number;
+};
+
+export type BranchAnalysis = {
+  branch_count: number;
+  avg_branch_angle_deg: number;
+  min_branch_angle_deg: number;
+  max_branch_angle_deg: number;
+  branch_angle_std_deg: number;
+  avg_branch_length_m: number;
+  branch_symmetry_index: number;
+  branching_density_per_m: number;
+  health_notes: string[];
+  quadrant_distribution: {
+    N: number;
+    E: number;
+    S: number;
+    W: number;
+  };
+  branch_details: BranchDetail[];
+};
+
+export type ColorAnalysis = {
+  green_fraction: number;
+  greenness_index: number;
+  stress_ratio: number;
+  color_homogeneity: number;
+  trunk_leaf_ratio: number;
+  health_score: number;
+  dominant_color_rgb: number[];
+  analyzed_frames: number;
+};
+
 export type Tree = {
   id: string;
   video_url: string;
@@ -25,4 +61,7 @@ export type Tree = {
   timestamp: Timestamp;
   tags?: string[];
   measurements?: TreeMeasurements;
+  color_analysis?: ColorAnalysis;
+  advanced_measurements?: string;
+  branch_analysis?: BranchAnalysis;
 };
