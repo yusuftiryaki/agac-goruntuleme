@@ -140,8 +140,8 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
         setIsLoading(true);
         const viewer = new GaussianSplats3D.Viewer({
           rootElement: viewerContainer,
-          cameraUp: [0, -1, 0],
-          initialCameraPosition: [0, -2, 5],
+          cameraUp: [0, 1, 0],
+          initialCameraPosition: [0, 0, 5],
           initialCameraLookAt: [0, 0, 0],
           selfDrivenMode: true,
           useBuiltInControls: true,
@@ -156,7 +156,7 @@ export default function ModelViewerComponent({ src }: ModelViewerProps) {
         await viewer.addSplatScene(splatSrc, {
           splatAlphaRemovalThreshold: 5,
           showLoadingUI: false,
-          position: [0, 1, 0],
+          position: [0, -1, 0],
           rotation: [0, 0, 0, 1],
           scale: [1.5, 1.5, 1.5],
           streamView: true
